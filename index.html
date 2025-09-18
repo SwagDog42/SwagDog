@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>$WAGDAWG</title>
@@ -71,9 +74,12 @@
   </div>
 
     <img src="Grafiti$WAGDAWG.png" width="400" />
+
+  <div class="roadmap">
+  <p>Live SOL Price Chart (USD)</p>
+  <canvas id="solChart" width="600" height="400"></canvas>
+</div>
   
-
-
   
   <div class="roadmap">
    <p> About $WAGDAWG </p>
@@ -91,5 +97,55 @@ It’s simple, transparent, and built for fun and learning.
   <footer>
     © 2025 $WAGDAWG Coin – Made with 🐕 & Swag
   </footer>
+<script>
+const ctx = document.getElementById('solChart').getContext('2d');
+
+let solChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [], // Zeitstempel
+        datasets: [{
+            label: 'SOL Price (USD)',
+            data: [],
+            borderColor: '#ff9800',
+            backgroundColor: 'rgba(255, 152, 0, 0.2)',
+            tension: 0.2
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { type: 'time', time: { unit: 'minute' } },
+            y: { beginAtZero: false }
+        }
+    }
+});
+
+async function fetchSolPrice() {
+    try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+        const data = await res.json();
+        const price = data.solana.usd;
+        const now = new Date();
+
+        // Datenlimit (z.B. 30 Punkte)
+        if (solChart.data.labels.length > 30) {
+            solChart.data.labels.shift();
+            solChart.data.datasets[0].data.shift();
+        }
+
+        solChart.data.labels.push(now);
+        solChart.data.datasets[0].data.push(price);
+        solChart.update();
+    } catch (err) {
+        console.error('Error fetching SOL price:', err);
+    }
+}
+
+// Erstes Laden
+fetchSolPrice();
+// Update alle 10 Sekunden
+setInterval(fetchSolPrice, 10000);
+</script>
 </body>
 </html>
